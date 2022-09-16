@@ -1,5 +1,4 @@
-import Navbar from "./Navbar";
-import Footer from "./Footer";
+import Sidebar from "./Sidebar";
 import { motion, AnimatePresence } from "framer-motion";
 
 
@@ -14,7 +13,7 @@ const Layout = ({ children }) => {
 
     return (
         <>
-            <Navbar />
+            <Sidebar />
             <motion.main
                 variants={variants} // Pass the variant object into Framer Motion
                 initial="hidden" // Set the initial state to variants.hidden
@@ -26,7 +25,7 @@ const Layout = ({ children }) => {
                 {children}
 
             </motion.main>
-            <Footer />
+
         </>
     );
 };
