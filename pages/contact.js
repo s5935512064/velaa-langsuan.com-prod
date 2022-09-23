@@ -18,9 +18,10 @@ const Contact = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 w-full gap-4 ">
 
-                            <div className="flex flex-col gap-3 items-center md:items-start w-full ">
+                            <div className="flex flex-col gap-2 items-center md:items-start w-full ">
 
                                 <h1 className="font-bold">Contact Info</h1>
+
                                 <div className="max-w-sm w-full flex flex-col gap-2">
                                     <label htmlFor="address" className="text-sm  shrink-0">Address :</label>
                                     <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
@@ -63,7 +64,7 @@ const Contact = () => {
 
                             </div>
 
-                            <div className="flex flex-col gap-3 items-center md:items-start w-full">
+                            <div className="flex flex-col gap-3\2 items-center md:items-start w-full">
                                 <h1 className="font-bold ">Social Link</h1>
 
 

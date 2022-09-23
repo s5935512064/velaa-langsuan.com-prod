@@ -2,9 +2,22 @@ import React, { useState, useEffect, useRef, Fragment } from "react";
 import Image from 'next/image'
 import { Dialog, Transition } from '@headlessui/react'
 import Link from "next/link";
+import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import moment from 'moment';
+import 'moment/locale/th';
 
+moment.locale('en');
+moment().format();
 
-const CreateEvent = ({ onCreateVender }) => {
+const CreateEvent = () => {
+
+    var currentDate = moment().format("YYYY-MM-DD");
+
+    const [value, setValue] = useState(new Date(currentDate));
 
     const [name, setName] = useState('');
     const [nameTH, setNameTH] = useState('');
@@ -22,6 +35,12 @@ const CreateEvent = ({ onCreateVender }) => {
 
 
     let [isOpen, setIsOpen] = useState(false)
+
+    const handleChange = (newValue) => {
+        setValue(newValue);
+        // getTable(moment(newValue).format('YYYY-MM-DD'))
+
+    };
 
     function closeModal() {
         setIsOpen(false)
@@ -134,7 +153,6 @@ const CreateEvent = ({ onCreateVender }) => {
         <>
             <div className="relative">
                 <button onClick={openModal} className="bg-black text-white px-4 py-3 text-sm shadow-md rounded-lg inline-flex gap-2">
-
                     <span>
                         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M9.00008 0.666626C4.40008 0.666626 0.666748 4.39996 0.666748 8.99996C0.666748 13.6 4.40008 17.3333 9.00008 17.3333C13.6001 17.3333 17.3334 13.6 17.3334 8.99996C17.3334 4.39996 13.6001 0.666626 9.00008 0.666626ZM13.1667 9.83329H9.83341V13.1666H8.16675V9.83329H4.83341V8.16663H8.16675V4.83329H9.83341V8.16663H13.1667V9.83329Z" fill="currentColor" />
@@ -172,7 +190,7 @@ const CreateEvent = ({ onCreateVender }) => {
                                 leaveTo="opacity-0 scale-95"
                             >
 
-                                <Dialog.Panel className="w-fit max-w-[850px]  md:max-h-[85vh] h-full transform overflow-y-scroll rounded-2xl bg-white p-6 md:p-10 text-left align-middle shadow-xl transition-all relative whitespace-nowrap overflow-auto scrollbar-hide">
+                                <Dialog.Panel className="w-full max-w-[850px]  md:max-h-[85vh] h-full transform overflow-y-scroll rounded-2xl bg-white p-6 md:p-10 text-left align-middle shadow-xl transition-all relative whitespace-nowrap overflow-auto scrollbar-hide">
 
                                     <div className="absolute  flex justify-end right-5 top-5">
                                         <button onClick={closeModal} className="z-50">
@@ -190,14 +208,14 @@ const CreateEvent = ({ onCreateVender }) => {
                                             as="h3"
                                             className=" text-2xl uppercase font-bold   "
                                         >
-                                            New Vender
+                                            New Event
                                         </Dialog.Title>
                                     </div>
 
-                                    <form id="createVenderForm" onSubmit={handleSubmit} className="max-w-7xl w-full p-2 md:p-5 ">
-                                        <div className="w-full h-fit grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                    <form id="createEventForm" onSubmit={handleSubmit} className=" w-full p-2 md:p-5 ">
+                                        <div className="w-full h-fit grid grid-cols-1 md:grid-cols-2 gap-2">
 
-                                            <div className="flex justify-center row-span-2">
+                                            {/* <div className="flex justify-center row-span-2">
 
                                                 <label className="flex h-36 w-36 cursor-pointer flex-col items-center justify-center rounded-full border bg-white uppercase tracking-wide border-dashed  relative overflow-hidden">
 
@@ -229,7 +247,7 @@ const CreateEvent = ({ onCreateVender }) => {
                                                     </>}
 
                                                 </label>
-                                            </div>
+                                            </div> */}
 
                                             <div className="max-w-sm w-full flex flex-col">
                                                 <label htmlFor="name" className="block text-sm shrink-0 text-gray-600 ">Name :</label>
@@ -239,7 +257,7 @@ const CreateEvent = ({ onCreateVender }) => {
                                             </div>
 
                                             <div className="max-w-sm w-full flex flex-col">
-                                                <label htmlFor="name" className="block text-sm shrink-0 text-gray-600 ">Keyword :</label>
+                                                <label htmlFor="name" className="block text-sm shrink-0 text-gray-600 ">Device :</label>
                                                 <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
                                                     <input onChange={(e) => setName(e.target.value)} type="text" name="name" id="name" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
                                                 </div>
@@ -257,83 +275,75 @@ const CreateEvent = ({ onCreateVender }) => {
                                                 <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
                                                     <textarea onChange={(e) => setDetailTH(e.target.value)} type="text" name="detail" id="detail" className="w-full outline-none border-none  placeholder:text-sm pl-1" />
                                                 </div>
+
+
                                             </div>
 
                                             <div className="max-w-sm w-full flex flex-col">
-                                                <label htmlFor="name" className="block text-sm shrink-0 text-gray-600 ">Open Time :</label>
-                                                <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
-                                                    <input type="text" name="name" id="name" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
-                                                </div>
+                                                <label htmlFor="name" className="block text-sm shrink-0 text-gray-600 ">Start :</label>
+                                                <LocalizationProvider dateAdapter={AdapterMoment}>
+                                                    <Stack spacing={4}>
+                                                        <DesktopDatePicker
+                                                            mask='__/__/____'
+                                                            inputFormat="DD/MM/YYYY"
+                                                            value={value}
+                                                            onChange={handleChange}
+                                                            renderInput={(params) => <TextField {...params} />}
+                                                        />
+                                                    </Stack>
+                                                </LocalizationProvider>
+                                                {/* <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
+                                                    <input onChange={(e) => setName(e.target.value)} type="text" name="name" id="name" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
+                                                </div> */}
                                             </div>
 
                                             <div className="max-w-sm w-full flex flex-col">
-                                                <label htmlFor="phone" className="block text-sm shrink-0 text-gray-600 ">Phone :</label>
-                                                <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
-                                                    <input type="tel" name="phone" id="phone" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
-                                                </div>
+                                                <label htmlFor="name" className="block text-sm shrink-0 text-gray-600 ">End :</label>
+                                                <LocalizationProvider dateAdapter={AdapterMoment}>
+                                                    <Stack spacing={4}>
+                                                        <DesktopDatePicker
+                                                            mask='__/__/____'
+                                                            inputFormat="DD/MM/YYYY"
+                                                            value={value}
+                                                            onChange={handleChange}
+                                                            renderInput={(params) => <TextField {...params} />}
+                                                        />
+                                                    </Stack>
+                                                </LocalizationProvider>
                                             </div>
 
-                                            <div className="max-w-sm w-full flex flex-col">
-                                                <label htmlFor="name" className="block text-sm shrink-0 text-gray-600 ">Facebook :</label>
-                                                <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
-                                                    <input onChange={(e) => setFacebook(e.target.value)} type="text" name="name" id="name" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
-                                                </div>
-                                            </div>
-
-                                            <div className="max-w-sm w-full flex flex-col">
-                                                <label htmlFor="name" className="block text-sm shrink-0 text-gray-600 ">Line :</label>
-                                                <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
-                                                    <input onChange={(e) => setLine(e.target.value)} type="text" name="name" id="name" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
-                                                </div>
-                                            </div>
-
-                                            <div className="max-w-sm w-full flex flex-col">
-                                                <label htmlFor="instragram" className="block text-sm shrink-0 text-gray-600 ">Instragram :</label>
-                                                <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
-                                                    <input onChange={(e) => setLine(e.target.value)} type="text" name="instragram" id="instragram" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
-                                                </div>
-                                            </div>
-
-                                            <div className="max-w-sm w-full flex flex-col">
-                                                <label htmlFor="delivery" className="block text-sm shrink-0 text-gray-600 ">Delivery :</label>
-                                                <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
-                                                    <input onChange={(e) => setLine(e.target.value)} type="text" name="delivery" id="delivery" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
-                                                </div>
-                                            </div>
-
-                                            <div className="max-w-sm w-full flex flex-col">
-                                                <label htmlFor="grabfood" className="block text-sm shrink-0 text-gray-600 ">Grabfood :</label>
-                                                <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
-                                                    <input onChange={(e) => setLine(e.target.value)} type="text" name="grabfood" id="grabfood" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
-                                                </div>
-                                            </div>
-
-                                            <div className="max-w-sm w-full flex flex-col">
-                                                <label htmlFor="lineman" className="block text-sm shrink-0 text-gray-600 ">Lineman :</label>
-                                                <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
-                                                    <input onChange={(e) => setLine(e.target.value)} type="text" name="lineman" id="lineman" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
-                                                </div>
-                                            </div>
-
-                                            <div className="max-w-sm w-full flex flex-col">
-                                                <label htmlFor="robinhood" className="block text-sm shrink-0 text-gray-600 ">Robinhood :</label>
-                                                <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
-                                                    <input onChange={(e) => setLine(e.target.value)} type="text" name="robinhood" id="robinhood" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
-                                                </div>
-                                            </div>
                                         </div>
 
                                         <section className="py-4 w-full h-full flex flex-col col-span-2 overflow-hidden">
-                                            <div className="px-4 rounded-md border-dashed border  py-12 flex flex-col justify-center items-center">
+                                            <div className="px-4 rounded-md border-dashed border  py-12 flex gap-4 justify-center items-center">
 
-                                                <p className="mb-3  text-gray-900 flex flex-wrap justify-center text-xs leading-normal uppercase">
-                                                    <span>Drag and drop your</span>&nbsp;<span>files anywhere or</span>
-                                                </p>
 
                                                 <label>
                                                     <input onChange={onChangeGallery} id="hidden-input" type="file" multiple className="hidden" />
                                                     <span className="mt-2 rounded-sm px-3 py-1 bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none text-sm">
-                                                        Upload Photo
+                                                        Upload Full Picture
+                                                    </span>
+                                                </label>
+                                                <label>
+                                                    <input onChange={onChangeGallery} id="hidden-input" type="file" multiple className="hidden" />
+                                                    <span className="mt-2 rounded-sm px-3 py-1 bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none text-sm">
+                                                        Upload Backgroud
+                                                    </span>
+                                                </label>
+
+
+                                                <label>
+                                                    <input onChange={onChangeGallery} id="hidden-input" type="file" multiple className="hidden" />
+                                                    <span className="mt-2 rounded-sm px-3 py-1 bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none text-sm">
+                                                        Upload Text
+                                                    </span>
+                                                </label>
+
+
+                                                <label>
+                                                    <input onChange={onChangeGallery} id="hidden-input" type="file" multiple className="hidden" />
+                                                    <span className="mt-2 rounded-sm px-3 py-1 bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none text-sm">
+                                                        Upload Border
                                                     </span>
                                                 </label>
 
@@ -380,7 +390,7 @@ const CreateEvent = ({ onCreateVender }) => {
                                         </section>
 
                                         <div className="my-4 flex w-full justify-around gap-3 relative col-span-2">
-                                            <button type="submit" className="w-fit px-6 py-2 text-white bg-black shadow-md rounded-lg disabled:opacity-25 text-sm">CREATE NEW VENDER</button>
+                                            <button type="submit" className="w-fit px-6 py-2 text-white bg-black shadow-md rounded-lg disabled:opacity-25 text-sm">CREATE NEW EVENT</button>
 
                                         </div>
 

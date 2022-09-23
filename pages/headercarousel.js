@@ -6,10 +6,17 @@ import DataTable from 'react-data-table-component';
 import { Disclosure } from '@headlessui/react'
 import Image from "next/image";
 import UploadImage from "../components/UploadImage";
+import Swal from 'sweetalert2'
+import { Switch } from '@headlessui/react'
+import { Fancybox, Carousel, Panzoom } from "@fancyapps/ui";
 
-const vendersInfo = [
-    { id: 4, name: "Co limited" },
-    { id: 1, name: "EL GAUCHO ARGENTINIAN STEAKHOUSE" },
+function classNames(...classes) {
+    return classes.filter(Boolean).join(" ");
+}
+
+const carousel = [
+    { id: 1, alt: "garden", src: "/assets/08.webp", create_date: "September 21, 2022", status: false },
+    { id: 2, alt: "garden", src: "/assets/08.webp", create_date: "September 21, 2022", status: true },
 ]
 
 const customStyles = {
@@ -38,9 +45,9 @@ const Headercarousel = () => {
 
     const [filterText, setFilterText] = useState('');
 
-    const filteredItems = !filterText ? vendersInfo :
-        vendersInfo.filter(
-            item => item.name.toLowerCase().includes(filterText.toLowerCase()),
+    const filteredItems = !filterText ? carousel :
+        carousel.filter(
+            item => item.alt.toLowerCase().includes(filterText.toLowerCase()),
         );
 
 
@@ -54,7 +61,7 @@ const Headercarousel = () => {
 
         // const response = await axios.get(`https://reqres.in/api/users?page=${page}&per_page=${perPage}&delay=1`);
 
-        setData(vendersInfo);
+        setData(carousel);
         // setTotalRows(vendersInfo.total);
         setLoading(false);
     };
@@ -68,11 +75,40 @@ const Headercarousel = () => {
 
         // const response = await axios.get(`https://reqres.in/api/users?page=${page}&per_page=${newPerPage}&delay=1`);
 
-        setData(vendersInfo);
+        setData(carousel);
         // setPerPage(newPerPage);
         setLoading(false);
     };
 
+    const deleteVender = async (id) => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+
+                // let deleteURL = `http://localhost:3000/api/vender/${id}`
+
+                // await axios.delete(deleteURL, {
+                //     data: id
+                // })
+                //     .then((res) => console.log(res))
+                //     .catch((err) => console.log(err))
+
+                onTableChange("update")
+            }
+        })
+    }
+
+    const updateStatus = async (id) => {
+        console.log("ddddd", id)
+
+    }
 
     useEffect(() => {
         fetchUsers(1); // fetch page 1 of users
@@ -118,10 +154,38 @@ const Headercarousel = () => {
 
     }, [filterText]);
 
+    useEffect(() => {
+        Fancybox.bind("[data-fancybox]", {
+            Thumbs: false,
+
+            Toolbar: {
+                display: [
+                    { id: "prev", position: "center" },
+                    { id: "counter", position: "center" },
+                    { id: "next", position: "center" },
+                    "zoom",
+                    "slideshow",
+                    "fullscreen",
+                    "download",
+                    "thumbs",
+                    "close",
+                ],
+            },
+            Image: {
+                Panzoom: {
+                    zoomFriction: 0.7,
+                    maxScale: function () {
+                        return 5;
+                    },
+                },
+            },
+        });
+    }, []);
+
 
     const columns = [
         {
-            name: 'No.',
+            name: 'ID',
             selector: row => row.id,
             width: "6rem",
             sortable: true,
@@ -129,15 +193,24 @@ const Headercarousel = () => {
 
         },
         {
-            name: 'Name',
-            selector: row => row.name,
+            name: 'Alt',
+            selector: row => row.alt,
+            sortable: true,
+
+        },
+
+
+        {
+            name: 'Preview',
+            selector: row => <div className="relative py-4 "> <div className="w-20 h-20 relative"><Image href={row.src}
+                data-fancybox={row.id} src={row.src} alt={row.alt} layout="fill" objectFit="cover" objectPosition={"center"} className="cursor-pointer" /> </div></div>,
             sortable: true,
 
         },
 
         {
-            name: 'Gallery',
-            // selector: row => row.name,
+            name: 'Upload_date',
+            selector: row => row.create_date,
             sortable: true,
 
         },
@@ -146,19 +219,30 @@ const Headercarousel = () => {
         {
             name: 'Status',
             center: true,
-            // selector: row => row.vender_active.data == 0 ? <p className="text-red-600 bg-red-200 w-fit px-4 py-1 rounded-2xl">Disable</p> : <p className="text-green-600 bg-green-200 w-fit px-4 py-1 rounded-2xl">Active</p>,
+            selector: row => <Switch
+                checked={row.status}
+                onChange={() => updateStatus(row.id)}
+                className={`${row.status ? 'bg-teal-600' : 'bg-gray-200'
+                    } relative inline-flex h-6 w-11 items-center rounded-full`}
+            >
+                <span className="sr-only">Enable notifications</span>
+                <span
+                    className={`${row.status ? 'translate-x-6' : 'translate-x-1'
+                        } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                />
+            </Switch>,
 
         },
 
 
         {
             name: 'Action',
-            width: "15rem",
+            width: "12rem",
             center: true,
             selector: row => <div className="inline-flex gap-3">
 
                 {/* <UpdateVender data={row} onUpdateVender={updateVender} /> */}
-                <button className="bg-red-300 p-2 text-white rounded">DELETE</button>
+                <button onClick={() => deleteVender(row.id)} className="bg-red-500 p-2 text-white rounded text-sm">DELETE</button>
             </div>,
         },
     ];

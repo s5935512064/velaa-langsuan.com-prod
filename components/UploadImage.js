@@ -194,14 +194,17 @@ const UploadImage = ({ onCreateVender }) => {
                                         </Dialog.Title>
                                     </div>
 
+
                                     <form id="createVenderForm" onSubmit={handleSubmit} className="max-w-7xl w-full p-2 md:p-5 ">
 
+                                        <p className="text-sm text-gray-400">รูปที่ใช้ควรมีขนาดความกว้างที่ 1920 px นามสกุลที่อนุญาตคือ (*png , *jpg ,* webp)</p>
                                         <section className="py-4 w-full h-full flex flex-col col-span-2 overflow-hidden">
+
                                             <div className="px-4 rounded-md border-dashed border  py-12 flex flex-col justify-center items-center">
 
-                                                <p className="mb-3  text-gray-900 flex flex-wrap justify-center text-xs leading-normal uppercase">
+                                                {/* <p className="mb-3  text-gray-900 flex flex-wrap justify-center text-xs leading-normal uppercase">
                                                     <span>Drag and drop your</span>&nbsp;<span>files anywhere or</span>
-                                                </p>
+                                                </p> */}
 
                                                 <label>
                                                     <input onChange={onChangeGallery} id="hidden-input" type="file" multiple className="hidden" />

@@ -8,10 +8,19 @@ import Image from "next/image";
 import Link from "next/link";
 import axios from "axios";
 import CreateEvent from "../components/CreateEvent";
+import Swal from 'sweetalert2'
+import { Switch } from '@headlessui/react'
+import { Fancybox, Carousel, Panzoom } from "@fancyapps/ui";
 
-const vendersInfo = [
-    { id: 4, name: "Co limited" },
-    { id: 1, name: "EL GAUCHO ARGENTINIAN STEAKHOUSE" },
+function classNames(...classes) {
+    return classes.filter(Boolean).join(" ");
+}
+
+
+const eventInfo = [
+    { id: 1, name: "King Rama", detail: "", srcBG: "", srcText: "", secBorder: "", start_date: "September 21, 2022", end_date: "September 30, 2022", status: false, device: "mobile", },
+    { id: 2, name: "Art Lanna with Artist", detail: "", srcBG: "", srcText: "", secBorder: "", start_date: "September 21, 2022", end_date: " September 21, 2022", status: true, device: "desktop", },
+
 ]
 
 const customStyles = {
@@ -43,8 +52,8 @@ const Event = () => {
 
     const [filterText, setFilterText] = useState('');
 
-    const filteredItems = !filterText ? vendersInfo :
-        vendersInfo.filter(
+    const filteredItems = !filterText ? eventInfo :
+        eventInfo.filter(
             item => item.name.toLowerCase().includes(filterText.toLowerCase()),
         );
 
@@ -59,7 +68,7 @@ const Event = () => {
 
         // const response = await axios.get(`https://reqres.in/api/users?page=${page}&per_page=${perPage}&delay=1`);
 
-        setData(vendersInfo);
+        setData(eventInfo);
         // setTotalRows(vendersInfo.total);
         setLoading(false);
     };
@@ -73,11 +82,15 @@ const Event = () => {
 
         // const response = await axios.get(`https://reqres.in/api/users?page=${page}&per_page=${newPerPage}&delay=1`);
 
-        setData(vendersInfo);
+        setData(eventInfo);
         // setPerPage(newPerPage);
         setLoading(false);
     };
 
+    const updateStatus = async (id) => {
+        console.log("ddddd", id)
+
+    }
 
     useEffect(() => {
         fetchUsers(1); // fetch page 1 of users
@@ -126,7 +139,7 @@ const Event = () => {
 
     const columns = [
         {
-            name: 'No.',
+            name: 'ID',
             selector: row => row.id,
             width: "6rem",
             sortable: true,
@@ -135,14 +148,54 @@ const Event = () => {
         },
         {
             name: 'Name',
+            grow: 2,
             selector: row => row.name,
             sortable: true,
 
         },
+        {
+            name: 'Device',
+            selector: row =>
+                row.device == "mobile" ? <div className=" relative ">
+                    <svg width="12" height="20" viewBox="0 0 12 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10.1667 0.841707L1.83338 0.833374C0.916715 0.833374 0.175049 1.58337 0.175049 2.50004V17.5C0.175049 18.4167 0.916715 19.1667 1.83338 19.1667H10.1667C11.0834 19.1667 11.8334 18.4167 11.8334 17.5V2.50004C11.8334 1.58337 11.0834 0.841707 10.1667 0.841707ZM10.1667 15.8334H1.83338V4.16671H10.1667V15.8334Z" fill="black" />
+                    </svg>
+
+
+                </div> : <div><svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.4999 0.666626H2.49992C1.58325 0.666626 0.833252 1.41663 0.833252 2.33329V12.3333C0.833252 13.25 1.58325 14 2.49992 14H8.33325V15.6666H6.66659V17.3333H13.3333V15.6666H11.6666V14H17.4999C18.4166 14 19.1666 13.25 19.1666 12.3333V2.33329C19.1666 1.41663 18.4166 0.666626 17.4999 0.666626ZM17.4999 12.3333H2.49992V2.33329H17.4999V12.3333Z" fill="black" />
+                </svg>
+
+                </div>
+            ,
+            sortable: true,
+
+        },
+        {
+            name: 'Preview',
+            allowOverflow: true,
+            selector: row => <div className="relative">
+
+                <button className="hover:scale-110 duration-300" > <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12.5 11H11.71L11.43 10.73C12.41 9.59 13 8.11 13 6.5C13 2.91 10.09 0 6.5 0C2.91 0 0 2.91 0 6.5C0 10.09 2.91 13 6.5 13C8.11 13 9.59 12.41 10.73 11.43L11 11.71V12.5L16 17.49L17.49 16L12.5 11V11ZM6.5 11C4.01 11 2 8.99 2 6.5C2 4.01 4.01 2 6.5 2C8.99 2 11 4.01 11 6.5C11 8.99 8.99 11 6.5 11Z" fill="currentColor" />
+                </svg>
+                </button>
+            </div>,
+            sortable: true,
+
+        },
+
+
 
         {
-            name: 'Gallery',
-            // selector: row => row.name,
+            name: 'Start_date',
+            selector: row => row.start_date,
+            sortable: true,
+
+        },
+        {
+            name: 'End_date',
+            selector: row => row.end_date,
             sortable: true,
 
         },
@@ -150,8 +203,20 @@ const Event = () => {
 
         {
             name: 'Status',
+            width: "6rem",
             center: true,
-            // selector: row => row.vender_active.data == 0 ? <p className="text-red-600 bg-red-200 w-fit px-4 py-1 rounded-2xl">Disable</p> : <p className="text-green-600 bg-green-200 w-fit px-4 py-1 rounded-2xl">Active</p>,
+            selector: row => <Switch
+                checked={row.status}
+                onChange={() => updateStatus(row.id)}
+                className={`${row.status ? 'bg-teal-600' : 'bg-gray-200'
+                    } relative inline-flex h-6 w-11 items-center rounded-full`}
+            >
+                <span className="sr-only">Enable notifications</span>
+                <span
+                    className={`${row.status ? 'translate-x-6' : 'translate-x-1'
+                        } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                />
+            </Switch>,
 
         },
 
@@ -163,7 +228,8 @@ const Event = () => {
             selector: row => <div className="inline-flex gap-3">
 
                 {/* <UpdateVender data={row} onUpdateVender={updateVender} /> */}
-                <button className="bg-red-300 p-2 text-white rounded">DELETE</button>
+                <button onClick={() => deleteVender(row.id)} className="bg-teal-600 p-2 text-white rounded text-sm">UPDATE</button>
+                <button onClick={() => deleteVender(row.id)} className="bg-red-500 p-2 text-white rounded text-sm">DELETE</button>
             </div>,
         },
     ];
