@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image"
 import { useRouter } from "next/router";
 import Link from "next/link";
-
+import axios from "axios";
 
 const menu = [
     { name: "Overview", href: "/" }, { name: "Venders", href: "/venders" }, { name: "Header Carousel", href: "/headercarousel" }, { name: "Event", href: "/event" }, { name: "Gallery", href: "/gallery" }, { name: "Review", href: "/review" }, { name: "Contact", href: "/contact" }, { name: "Account", href: "/account" }
@@ -15,6 +15,42 @@ function classNames(...classes) {
 const Sidebar = () => {
 
     const router = useRouter();
+    const cookieToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    const [error, setError] = useState(null);
+    const [userInfo, setUserInfo] = useState(null)
+
+    const getProfile = async () => {
+
+        try {
+            const res = await axios.get(`http://localhost:4500/auth/profile`,
+                { headers: { "Authorization": `Bearer ${cookieToken}` }, withCredentials: true }
+            )
+
+            let id = res.data.payload.user.id
+
+            const result = await axios.get(`http://localhost:4500/users/${id}`,
+                { headers: { "Authorization": `Bearer ${cookieToken}` }, withCredentials: true }
+            )
+
+            setUserInfo(result.data)
+            setError("")
+
+        } catch (e) {
+            console.log(e)
+
+        }
+    }
+
+    const logOut = () => {
+        localStorage.removeItem("token");
+        router.push("/login")
+    }
+
+    useEffect(() => {
+        if (userInfo == null) {
+            getProfile()
+        }
+    }, [])
 
 
     return (
@@ -37,6 +73,7 @@ const Sidebar = () => {
                     <div className="divide-y divide-[#818384] divide-opacity-25 flex flex-col  ">
 
                         {menu.map((item, index) => (
+
                             <Link key={index} href={item.href}>
 
                                 <button className={classNames(router.pathname === item.href ? "text-white bg-[#323435]" : "text-[#818384]", "hover:text-white hover:bg-[#323435] p-3 shadow-md rounded-lg inline-flex gap-4 font-light")}>
@@ -107,6 +144,7 @@ const Sidebar = () => {
 
                                 </button>
                             </Link>
+
                         ))}
                     </div>
 
@@ -117,25 +155,36 @@ const Sidebar = () => {
 
                     <div className="flex gap-4 items-center mb-4" >
                         <div className="w-16 h-16  rounded-full relative overflow-hidden">
-                            <Image
-                                src={"/assets/review1.png"}
-                                alt="profile"
-                                layout="fill"
-                                objectFit="cover"
-                                objectPosition={"center"}
-                            />
+                            {userInfo && userInfo?.profileImg != '' ?
+                                <Image
+                                    priority
+                                    src={`http://localhost:4500${userInfo.profileImg}`}
+                                    alt="profile"
+                                    layout="fill"
+                                    objectFit="cover"
+                                    objectPosition={"center"} /> :
+                                <Image
+                                    priority
+                                    src="/assets/review1.png"
+                                    alt="profile"
+                                    layout="fill"
+                                    objectFit="cover"
+                                    objectPosition={"center"} />
+                            }
+
+
 
                         </div>
 
                         <div className="text-white text-sm">
-                            <p>Natthawut Thip.</p>
-                            <p>Admin</p>
+                            <p>{userInfo?.firstName + " " + userInfo?.lastName.substring(0, 4).concat('...')}</p>
+                            <p>{userInfo?.role ? "Admin" : "User"}</p>
                             <p className="text-xs mt-2 text-[#818384]">Edit profile</p>
                         </div>
 
                     </div>
 
-                    <button className="bg-[#323435] text-white px-4 py-3 text-sm shadow-md rounded-lg flex items-center text-center gap-6">
+                    <button onClick={logOut} className="bg-[#323435] text-white px-4 py-3 text-sm shadow-md rounded-lg flex items-center text-center gap-6">
                         <span>
                             <svg width="18" height="16" viewBox="0 0 18 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M13.1667 3.83333L11.9917 5.00833L14.1417 7.16667H5.66675V8.83333H14.1417L11.9917 10.9833L13.1667 12.1667L17.3334 8L13.1667 3.83333ZM2.33341 2.16667H9.00008V0.5H2.33341C1.41675 0.5 0.666748 1.25 0.666748 2.16667V13.8333C0.666748 14.75 1.41675 15.5 2.33341 15.5H9.00008V13.8333H2.33341V2.16667Z" fill="currentColor" />

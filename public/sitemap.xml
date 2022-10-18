@@ -2,55 +2,61 @@
     <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
     <loc>http://localhost:3000/account</loc>
-    <lastmod>2022-09-23T01:59:12.644Z</lastmod>
+    <lastmod>2022-10-18T02:09:52.352Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>http://localhost:3000/contact</loc>
-    <lastmod>2022-09-23T01:59:12.644Z</lastmod>
+    <lastmod>2022-10-18T02:09:52.352Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>http://localhost:3000/event</loc>
-    <lastmod>2022-09-23T01:59:12.644Z</lastmod>
+    <lastmod>2022-10-18T02:09:52.352Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>http://localhost:3000/gallery</loc>
-    <lastmod>2022-09-23T01:59:12.644Z</lastmod>
+    <lastmod>2022-10-18T02:09:52.352Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>http://localhost:3000/headercarousel</loc>
-    <lastmod>2022-09-23T01:59:12.644Z</lastmod>
+    <lastmod>2022-10-18T02:09:52.352Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>http://localhost:3000</loc>
-    <lastmod>2022-09-23T01:59:12.644Z</lastmod>
+    <lastmod>2022-10-18T02:09:52.352Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>http://localhost:3000/login</loc>
+    <lastmod>2022-10-18T02:09:52.352Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>http://localhost:3000/review</loc>
-    <lastmod>2022-09-23T01:59:12.644Z</lastmod>
+    <lastmod>2022-10-18T02:09:52.352Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>http://localhost:3000/signin</loc>
-    <lastmod>2022-09-23T01:59:12.644Z</lastmod>
+    <loc>http://localhost:3000/test</loc>
+    <lastmod>2022-10-18T02:09:52.352Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>http://localhost:3000/venders</loc>
-    <lastmod>2022-09-23T01:59:12.644Z</lastmod>
+    <lastmod>2022-10-18T02:09:52.352Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>

@@ -71,6 +71,7 @@ const CreateVender = ({ onCreateVender }) => {
         console.log(e.target.files.length)
         for (let i = 0; i < e.target.files.length; i++) {
             setImage(image => [...image, e.target.files[i]])
+
             const reader = new FileReader();
             reader.addEventListener("load", () => {
                 setImgPre(reader.result);

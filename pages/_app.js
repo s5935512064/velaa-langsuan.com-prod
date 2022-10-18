@@ -11,15 +11,28 @@ import "@fancyapps/ui/dist/fancybox.css";
 import axios from 'axios';
 import Script from 'next/script'
 import { v4 as uuidv4 } from 'uuid';
+import { SessionProvider } from "next-auth/react"
 
-function MyApp({ Component, pageProps }) {
+const parseJwt = (token) => {
+  try {
+    return JSON.parse(atob(token.split(".")[1]));
+  } catch (e) {
+    return null;
+  }
+};
 
 
-
+function MyApp({
+  Component,
+  pageProps: { session, ...pageProps },
+}) {
   const { pathname } = useRouter();
   const [data, setData] = useState(null);
-
   const router = useRouter();
+
+  const cookieToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+
+
 
 
   useEffect(() => {
@@ -201,6 +214,22 @@ function MyApp({ Component, pageProps }) {
 
 
 
+  useEffect(() => {
+    if (cookieToken == null) {
+      router.push("/login")
+    } else {
+
+      const decodedJwt = parseJwt(cookieToken);
+      if (decodedJwt.exp * 1000 < Date.now()) {
+        localStorage.removeItem("token");
+        router.push("/login")
+      }
+
+    }
+
+  }, [])
+
+
   return (
     < >
 
@@ -231,12 +260,9 @@ function MyApp({ Component, pageProps }) {
         initial={false}
       >
 
-
-
-        <Component {...pageProps} />
-
-
-
+        {/* <SessionProvider session={session}> */}
+        <Component {...pageProps} token={cookieToken} />
+        {/* </SessionProvider> */}
 
 
       </AnimatePresence>

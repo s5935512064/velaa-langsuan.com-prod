@@ -5,12 +5,13 @@ import Link from "next/link";
 import axios from "axios";
 import Swal from "sweetalert2";
 
-const uploadURL = `http://localhost:4500/carousels`
+const uploadURL = `http://localhost:4500/gallery`
 
 
-const UploadImage = ({ onUpload }) => {
+const UploadGallery = ({ onUpload }) => {
 
     const [status, setStatus] = useState(true)
+    const [category, setCategory] = useState("")
     const [gallery, setGallery] = useState([])
     const [galleryPre, setGalleryPre] = useState([])
     const [uploadPercentage, setUploadPercentage] = useState(0);
@@ -24,6 +25,7 @@ const UploadImage = ({ onUpload }) => {
 
     function openModal() {
 
+        setCategory("")
         setGalleryPre([])
         setGallery([])
 
@@ -69,6 +71,7 @@ const UploadImage = ({ onUpload }) => {
         let formData = new FormData();
 
         formData.append('status', status);
+        formData.append('category', category);
 
         gallery.forEach(element => {
             formData.append('image', element, element.name);
@@ -96,8 +99,11 @@ const UploadImage = ({ onUpload }) => {
                                 timer: 2000,
                                 showConfirmButton: false
                             }).then(() => {
+
+                                document.getElementById("upload-gallery").reset();
                                 setGalleryPre([])
                                 setGallery([])
+
                                 onUpload("success")
                             })
                         }
@@ -139,7 +145,7 @@ const UploadImage = ({ onUpload }) => {
                     </svg>
 
                 </span>
-                Upload Image
+                Upload Gallery
             </button>
 
 
@@ -187,12 +193,12 @@ const UploadImage = ({ onUpload }) => {
                                             as="h3"
                                             className=" text-2xl uppercase font-bold   "
                                         >
-                                            Carousel
+                                            Gallery
                                         </Dialog.Title>
                                     </div>
 
 
-                                    <form id="upload-carousel" onSubmit={handleSubmit} className="max-w-7xl w-full p-2 md:p-5 relative">
+                                    <form id="upload-gallery" onSubmit={handleSubmit} className="max-w-7xl w-full p-2 md:p-5 relative">
 
 
                                         <p className="text-sm text-gray-400 font-light">รูปที่ใช้ควรมีขนาดความกว้างที่ 1920 px นามสกุลที่อนุญาตคือ (*png , *jpg ,* webp)</p>
@@ -217,6 +223,14 @@ const UploadImage = ({ onUpload }) => {
                                                 </label>
 
                                             </div>
+
+                                            <div className="flex flex-col">
+                                                <label htmlFor="fName" className="block text-sm shrink-0 text-gray-600 ">Category :</label>
+                                                <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
+                                                    <input onChange={(e) => setCategory(e.target.value)} type="text" name="category" id="category" className="w-full outline-none border-none  placeholder:text-sm pl-1" />
+                                                </div>
+                                            </div>
+
 
                                             <h1 className="pt-4 pb-3 font-medium sm:text-lg text-gray-900">
                                                 To Upload
@@ -259,7 +273,7 @@ const UploadImage = ({ onUpload }) => {
                                         </section>
 
                                         <div className="my-4 flex w-full justify-around gap-3 relative col-span-2">
-                                            <button type="submit" className="w-fit px-6 py-2 text-white bg-black shadow-md rounded-lg disabled:opacity-25 text-sm">Upload Image</button>
+                                            <button type="submit" className="w-fit px-6 py-2 text-white bg-black shadow-md rounded-lg disabled:opacity-25 text-sm">Upload Gallery</button>
                                         </div>
 
                                     </form>
@@ -275,4 +289,4 @@ const UploadImage = ({ onUpload }) => {
     )
 }
 
-export default UploadImage
+export default UploadGallery

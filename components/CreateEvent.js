@@ -8,30 +8,40 @@ import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import moment from 'moment';
-import 'moment/locale/th';
+import axios from "axios";
+import Swal from "sweetalert2";
 
-moment.locale('en');
-moment().format();
-
-const CreateEvent = () => {
+const CreateEvent = ({ onCreated }) => {
 
     var currentDate = moment().format("YYYY-MM-DD");
 
     const [value, setValue] = useState(new Date(currentDate));
 
     const [name, setName] = useState('');
-    const [nameTH, setNameTH] = useState('');
-    const [image, setImage] = useState([])
-    const [imgPre, setImgPre] = useState(null);
-    const [gallery, setGallery] = useState([])
-    const [galleryPre, setGalleryPre] = useState([])
-    const [detail, setDetail] = useState('');
-    const [detailTH, setDetailTH] = useState('');
-    const [phone, setPhone] = useState('');
-    const [facebook, setFacebook] = useState('');
-    const [line, setLine] = useState('');
-    const [instragram, setInstragram] = useState('');
-    const [type, setType] = useState('');
+    const [startDate, setStartDate] = useState(new Date(currentDate))
+    const [endDate, setEndDate] = useState(new Date(currentDate))
+    const [banner, setBanner] = useState([])
+    const [backgound, setBackground] = useState([])
+    const [border, setBorder] = useState([])
+    const [textEvent, setTextEvent] = useState([])
+    const [device, setDivice] = useState("desktop")
+
+    const [galleryPre, setGalleryPre] = useState([
+        { title: "", image: null }
+    ])
+
+
+    // const [nameTH, setNameTH] = useState('');
+    // const [image, setImage] = useState([])
+    // const [imgPre, setImgPre] = useState(null);
+    // const [gallery, setGallery] = useState([])
+    // const [detail, setDetail] = useState('');
+    // const [detailTH, setDetailTH] = useState('');
+    // const [phone, setPhone] = useState('');
+    // const [facebook, setFacebook] = useState('');
+    // const [line, setLine] = useState('');
+    // const [instragram, setInstragram] = useState('');
+    // const [type, setType] = useState('');
 
 
     let [isOpen, setIsOpen] = useState(false)
@@ -48,10 +58,14 @@ const CreateEvent = () => {
 
     function openModal() {
         // console.log(data)
-        setImgPre(null)
-        setImage([])
+        // setImgPre(null)
+        // setImage([])
+        setBorder([])
+        setTextEvent([])
+        setBackground([])
+        setBanner([])
         setGalleryPre([])
-        setGallery([])
+        // setGallery([])
 
         setIsOpen(true)
     }
@@ -68,19 +82,20 @@ const CreateEvent = () => {
     }
 
 
-    function deleteGalImg(id) {
+    function deleteGalImg(e, title, id) {
 
-        event.preventDefault()
+        e.preventDefault()
+
+        if (title == "banner") setBanner([])
+        else if (title == "background") setBackground([])
+        else if (title == "border") setBorder([])
+        else if (title == "text") setTextEvent([])
 
         setGalleryPre([
             ...galleryPre.slice(0, id),
             ...galleryPre.slice(id + 1, galleryPre.length)
         ]);
 
-        setGallery([
-            ...gallery.slice(0, id),
-            ...gallery.slice(id + 1, gallery.length)
-        ]);
 
     }
 
@@ -99,69 +114,120 @@ const CreateEvent = () => {
         }
     };
 
-    const onChangeGallery = (e) => {
+    const onChangeGallery = (e, type) => {
+
         e.preventDefault()
-        console.log(e.target.files.length)
+
         for (let i = 0; i < e.target.files.length; i++) {
-            setGallery(image => [...image, e.target.files[i]])
+            if (type == "banner") setBanner(e.target.files[i])
+            else if (type == "background") setBackground(e.target.files[i])
+            else if (type == "border") setBorder(e.target.files[i])
+            else if (type == "text") setTextEvent(e.target.files[i])
+
+
             const reader = new FileReader();
             reader.addEventListener("load", () => {
-                setGalleryPre(image => [...image, reader.result]);
+                const temp = {
+                    title: type,
+                    image: reader.result
+                }
+                setGalleryPre(galleryPre => [...galleryPre, temp]);
             });
+
             reader.readAsDataURL(e.target.files[i]);
         }
 
     }
+
 
     async function handleSubmit(event) {
 
         event.preventDefault()
 
         let formData = new FormData();
-        formData.append('vender_name', name);
-        formData.append('vender_nameTH', nameTH);
-        formData.append('vender_detail', detail);
-        formData.append('vender_detailTH', detailTH);
-        formData.append('vender_phone', phone);
-        formData.append('vender_facebook', facebook);
-        formData.append('vender_line', line);
-        formData.append('vender_ig', instragram);
-        formData.append('vender_type', type);
-        image.forEach(element => {
-            formData.append('image', element, element.name);
-        });
-        gallery.forEach(element => {
-            formData.append('gallery', element, element.name);
-        });
+        formData.append('name', name);
+        formData.append('startDate', moment(startDate).format("ll"));
+        formData.append('endDate', moment(endDate).format("ll"));
+
+        formData.append('banner', banner, banner.name);
+        formData.append('background', backgound, backgound.name);
+        formData.append('border', border, border.name);
+        formData.append('textEvent', textEvent, textEvent.name);
+        formData.append('device', device);
 
 
-        let createURL = `http://localhost:3000/api/vender`
-        await axios.post(createURL, formData).then((res) => {
-            onCreateVender("finish")
-            if (res.status == 200) {
-                closeModal();
-            }
+        let createEvent = `http://localhost:4500/events`
 
-            // document.getElementById("createVenderForm").reset();
+        try {
+
+            let timeprogress = 0
+
+            const response = await axios.post(createEvent, formData, {
+                onUploadProgress: function (ProgressEvent) {
+                    timeprogress = ProgressEvent.total
+                }
+            })
+
+
+            Swal.fire({
+                title: 'Please Wait !',
+                allowEscapeKey: false,
+                allowOutsideClick: false,
+                timer: timeprogress / 1000,
+                didOpen: () => {
+                    Swal.showLoading()
+                }
+            }).then((result) => {
+
+                if (response.status == 201) {
+
+                    Swal.fire({
+                        title: 'Finished!',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        document.getElementById("createEventForm").reset();
+                        setGalleryPre([])
+                        setBanner([])
+                        setBackground([])
+                        setBorder([])
+                        setTextEvent([])
+                        onCreated("success")
+                    })
+                }
+            })
+
+
+        } catch (error) {
+
+            Swal.fire({
+                title: error.response.data.message,
+                text: "Please select your images. ",
+                icon: 'error',
+                didOpen: () => {
+                    Swal.hideLoading()
+                }
+            })
+
+
         }
 
-        ).catch((err) => console.log(err))
 
     }
 
     return (
         <>
-            <div className="relative">
-                <button onClick={openModal} className="bg-black text-white px-4 py-3 text-sm shadow-md rounded-lg inline-flex gap-2">
-                    <span>
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9.00008 0.666626C4.40008 0.666626 0.666748 4.39996 0.666748 8.99996C0.666748 13.6 4.40008 17.3333 9.00008 17.3333C13.6001 17.3333 17.3334 13.6 17.3334 8.99996C17.3334 4.39996 13.6001 0.666626 9.00008 0.666626ZM13.1667 9.83329H9.83341V13.1666H8.16675V9.83329H4.83341V8.16663H8.16675V4.83329H9.83341V8.16663H13.1667V9.83329Z" fill="currentColor" />
-                        </svg>
+            <button onClick={openModal} className="flex-shrink-0 bg-black text-white px-4 py-3 text-sm shadow-md rounded-lg inline-flex gap-2 justify-center">
+                <span>
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9.00008 0.666626C4.40008 0.666626 0.666748 4.39996 0.666748 8.99996C0.666748 13.6 4.40008 17.3333 9.00008 17.3333C13.6001 17.3333 17.3334 13.6 17.3334 8.99996C17.3334 4.39996 13.6001 0.666626 9.00008 0.666626ZM13.1667 9.83329H9.83341V13.1666H8.16675V9.83329H4.83341V8.16663H8.16675V4.83329H9.83341V8.16663H13.1667V9.83329Z" fill="currentColor" />
+                    </svg>
 
-                    </span>
-                    New Event
-                </button>
-            </div>
+                </span>
+                New Event
+            </button>
+
 
             <Transition appear show={isOpen} as={Fragment}>
                 <Dialog as="div" className="relative z-50" onClose={openModal}>
@@ -258,11 +324,14 @@ const CreateEvent = () => {
 
                                             <div className="max-w-sm w-full flex flex-col">
                                                 <label htmlFor="name" className="block text-sm shrink-0 text-gray-600 ">Device :</label>
-                                                <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
-                                                    <input onChange={(e) => setName(e.target.value)} type="text" name="name" id="name" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
+                                                <div className=" flex items-center py-[7px] px-3 border border-gray-300 rounded-md">
+                                                    <select onChange={(e) => setDivice(e.target.value)} name="device" id="device" className=" w-full outline-none border-none  placeholder:text-sm pl-1">
+                                                        <option value="desktop">Desktop</option>
+                                                        <option value="mobile">Mobile</option>
+                                                    </select>
                                                 </div>
                                             </div>
-
+                                            {/* 
                                             <div className="max-w-sm w-full flex flex-col">
                                                 <label htmlFor="detail" className="block text-sm shrink-0 text-gray-600 ">Detail : </label>
                                                 <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
@@ -277,7 +346,7 @@ const CreateEvent = () => {
                                                 </div>
 
 
-                                            </div>
+                                            </div> */}
 
                                             <div className="max-w-sm w-full flex flex-col">
                                                 <label htmlFor="name" className="block text-sm shrink-0 text-gray-600 ">Start :</label>
@@ -286,8 +355,8 @@ const CreateEvent = () => {
                                                         <DesktopDatePicker
                                                             mask='__/__/____'
                                                             inputFormat="DD/MM/YYYY"
-                                                            value={value}
-                                                            onChange={handleChange}
+                                                            value={startDate}
+                                                            onChange={(newValue) => setStartDate(newValue)}
                                                             renderInput={(params) => <TextField {...params} />}
                                                         />
                                                     </Stack>
@@ -304,8 +373,8 @@ const CreateEvent = () => {
                                                         <DesktopDatePicker
                                                             mask='__/__/____'
                                                             inputFormat="DD/MM/YYYY"
-                                                            value={value}
-                                                            onChange={handleChange}
+                                                            value={endDate}
+                                                            onChange={(newValue) => setEndDate(newValue)}
                                                             renderInput={(params) => <TextField {...params} />}
                                                         />
                                                     </Stack>
@@ -315,34 +384,37 @@ const CreateEvent = () => {
                                         </div>
 
                                         <section className="py-4 w-full h-full flex flex-col col-span-2 overflow-hidden">
-                                            <div className="px-4 rounded-md border-dashed border  py-12 flex gap-4 justify-center items-center">
+                                            <div className="px-4 rounded-md border-dashed border  py-12 flex gap-4 justify-center items-center flex-wrap">
 
+                                                <label className="bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none text-sm rounded-sm px-3 py-2 w-40 h-full  flex justify-center items-center cursor-pointer">
+                                                    <input onChange={(e) => onChangeGallery(e, "banner")} id="hidden-input" type="file" className="hidden" />
 
-                                                <label>
-                                                    <input onChange={onChangeGallery} id="hidden-input" type="file" multiple className="hidden" />
-                                                    <span className="mt-2 rounded-sm px-3 py-1 bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none text-sm">
+                                                    <span className="">
                                                         Upload Full Picture
                                                     </span>
+
                                                 </label>
-                                                <label>
-                                                    <input onChange={onChangeGallery} id="hidden-input" type="file" multiple className="hidden" />
-                                                    <span className="mt-2 rounded-sm px-3 py-1 bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none text-sm">
+
+                                                <label className="bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none text-sm rounded-sm px-3 py-2 w-40 h-full  flex justify-center items-center cursor-pointer">
+                                                    <input onChange={(e) => onChangeGallery(e, "background")} id="hidden-input" type="file" className="hidden" />
+                                                    <span className="">
                                                         Upload Backgroud
                                                     </span>
                                                 </label>
 
 
-                                                <label>
-                                                    <input onChange={onChangeGallery} id="hidden-input" type="file" multiple className="hidden" />
-                                                    <span className="mt-2 rounded-sm px-3 py-1 bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none text-sm">
+                                                <label className="bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none text-sm rounded-sm px-3 py-2 w-40 h-full  flex justify-center items-center cursor-pointer">
+                                                    <input onChange={(e) => onChangeGallery(e, "text")} id="hidden-input" type="file" className="hidden" />
+
+                                                    <span className="">
                                                         Upload Text
                                                     </span>
                                                 </label>
 
 
-                                                <label>
-                                                    <input onChange={onChangeGallery} id="hidden-input" type="file" multiple className="hidden" />
-                                                    <span className="mt-2 rounded-sm px-3 py-1 bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none text-sm">
+                                                <label className="bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none text-sm rounded-sm px-3 py-2 w-40 h-full  flex justify-center items-center cursor-pointer">
+                                                    <input onChange={(e) => onChangeGallery(e, "border")} id="hidden-input" type="file" className="hidden" />
+                                                    <span className="">
                                                         Upload Border
                                                     </span>
                                                 </label>
@@ -358,7 +430,7 @@ const CreateEvent = () => {
                                                     {galleryPre.map((item, index) => (
                                                         <li key={index} className="overflow-hidden w-36 h-36 relative flex justify-center h duration-300 border cursor-pointer">
                                                             <Image
-                                                                src={item}
+                                                                src={item.image}
                                                                 alt="logo"
                                                                 layout="fill"
                                                                 objectFit="contain"
@@ -366,7 +438,7 @@ const CreateEvent = () => {
                                                             />
 
                                                             <div className="absolute bottom-2 ">
-                                                                <button onClick={() => deleteGalImg(index)} className="delete ml-auto focus:outline-none hover:bg-gray-300 p-1 rounded-md">
+                                                                <button onClick={(e) => deleteGalImg(e, item.title, index)} className="delete ml-auto focus:outline-none hover:bg-gray-300 p-1 rounded-md">
                                                                     <svg className="pointer-events-none fill-current w-4 h-4 ml-auto" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
                                                                         <path className="pointer-events-none" d="M3 6l3 18h12l3-18h-18zm19-4v2h-20v-2h5.711c.9 0 1.631-1.099 1.631-2h5.316c0 .901.73 2 1.631 2h5.711z" />
                                                                     </svg>

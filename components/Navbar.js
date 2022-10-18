@@ -5,6 +5,9 @@ import Image from "next/image";
 import Clock from 'react-live-clock';
 import moment from "moment";
 import Sidebar from "./Sidebar";
+// import 'moment/locale/en';
+
+moment.locale('en')
 
 function classNames(...classes) {
     return classes.filter(Boolean).join(" ");
@@ -18,6 +21,7 @@ const menu = [
 const Navbar = (props) => {
     const router = useRouter();
     const [menuBar, setMenuBar] = useState(false);
+    const currentDate = moment().format("MMMM Do YYYY");
 
     const ToggleSidebar = () => {
         setMenuBar(!menuBar);
@@ -57,7 +61,7 @@ const Navbar = (props) => {
 
                 <div className="text-right">
                     <Clock format="HH:mm:ss" ticking={true} noSsr={true} className="text-xl font-medium " />
-                    <p className="text-xs ">  {moment().format("LL")}</p>
+                    <p className="text-xs ">  {currentDate}</p>
                 </div>
 
             </div>

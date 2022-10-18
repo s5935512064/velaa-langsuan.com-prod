@@ -8,6 +8,10 @@ import Image from "next/image";
 import Swal from 'sweetalert2'
 import UpdateUser from "../components/UpdateUser";
 import { Switch } from '@headlessui/react'
+import axios from "axios";
+import moment from "moment/moment";
+import useSWR, { mutate } from "swr";
+
 
 function classNames(...classes) {
     return classes.filter(Boolean).join(" ");
@@ -36,45 +40,6 @@ const customStyles = {
 };
 
 
-const dataUser = [
-    {
-        id: "VELAA001",
-        username: 'admin',
-        email: 'admin@admin.com',
-        password: "aaaa1111",
-
-        last_login: "September 21, 2022",
-        createAt: "September 21, 2022",
-        updateAt: "September 21, 2022",
-        rule: "admin",
-        phone: "509",
-        profileImg: "",
-        position: "IT",
-        status: "active",
-        Fname: "Natthawut",
-        Lname: "Thippasoet",
-    },
-    {
-        id: "VELAA002",
-        username: 'test',
-        email: 'test@admin.com',
-        password: "aaaa1111",
-
-        last_login: "September 21, 2022",
-        createAt: "September 21, 2022",
-        updateAt: "September 21, 2022",
-        rule: "admin",
-        phone: "",
-        profileImg: "",
-        position: "",
-        status: "inactive",
-        Fname: "",
-        Lname: "",
-    },
-
-]
-
-
 const Account = () => {
 
     const [filterText, setFilterText] = useState('');
@@ -83,37 +48,45 @@ const Account = () => {
     const [totalRows, setTotalRows] = useState(0);
     const [perPage, setPerPage] = useState(10);
 
-    const [username, setUsername] = useState("");
+    const [firstname, setFirstname] = useState("");
+    const [lastname, setLastname] = useState("");
     const [email, setEmail] = useState("");
-
+    const [role, setRole] = useState(true);
+    const [status, setStatus] = useState(true);
     const [password, setPassword] = useState("");
     const [passShow, setPassShow] = useState(false);
     const [cPassword, setCPassword] = useState("");
     const [CPassShow, setCPassShow] = useState(false);
-
-    const [fname, seFname] = useState("");
-    const [lname, setLname] = useState("");
-    const [permission, setPermission] = useState("");
-    const [status, setStatus] = useState("");
-
-
     const [cPasswordClass, setCPasswordClass] = useState(true);
     const [error, setError] = useState(null);
+    const [regisError, setRegisError] = useState(null)
+    const [refresh, setRefresh] = useState(false)
 
 
     const fetchUsers = async page => {
 
         setLoading(true);
-        // const response = await axios.get(`https://reqres.in/api/users?page=${page}&per_page=${perPage}&delay=1`);
-        setData(dataUser);
-        console.log(dataUser.length)
-        setTotalRows(dataUser.length);
+        const response = await axios.get(`http://localhost:4500/users?page=${page}&per_page=${perPage}&delay=1`);
+
+        const arraySorted = response.data.results.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+
+        setData(arraySorted);
+        setTotalRows(response.data.total);
         setLoading(false);
+
     };
 
-    const updateStatus = async (id) => {
-        // console.log("ddddd", id)
+    const updateStatus = async (id, oldStatus, oldPhone, oldPosition) => {
 
+        const updateURL = `http://localhost:4500/users/${id}`
+        const status = {
+            status: !oldStatus,
+
+        }
+
+        await axios.patch(updateURL, status, { withCredentials: true })
+            .then((res) => setRefresh(!refresh))
+            .catch((err) => console.log(err))
     }
 
     const handlePageChange = page => {
@@ -122,13 +95,18 @@ const Account = () => {
 
     const handlePerRowsChange = async (newPerPage, page) => {
         setLoading(true);
+        const response = await axios.get(`http://localhost:4500/users?page=${page}&per_page=${newPerPage}&delay=1`);
 
-        // const response = await axios.get(`https://reqres.in/api/users?page=${page}&per_page=${newPerPage}&delay=1`);
+        const arraySorted = response.data.results.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 
-        setData(dataUser);
+        setData(arraySorted);
         setPerPage(newPerPage);
         setLoading(false);
     };
+
+    const updated = () => {
+        setRefresh(!refresh)
+    }
 
     const deleteVender = async (id) => {
         Swal.fire({
@@ -142,24 +120,60 @@ const Account = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
 
-                // let deleteURL = `http://localhost:3000/api/vender/${id}`
+                const deleteURL = `http://localhost:4500/users/${id}`
 
-                // await axios.delete(deleteURL, {
-                //     data: id
-                // })
-                //     .then((res) => console.log(res))
-                //     .catch((err) => console.log(err))
-
-                onTableChange("update")
+                await axios.delete(deleteURL, { withCredentials: true })
+                    .then((res) => setRefresh(!refresh))
+                    .catch((err) => console.log(err))
             }
         })
     }
 
-
     useEffect(() => {
         fetchUsers(1); // fetch page 1 of users
-    }, []);
+    }, [refresh]);
 
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        const account = {
+            email: email,
+            password: password,
+            firstName: firstname,
+            lastName: lastname,
+            phone: "",
+            position: "",
+            profileImg: "",
+            role: role,
+            status: status
+        }
+        try {
+            const res = await axios.post(
+                `http://localhost:4500/auth/register`, account,
+                { withCredentials: true }
+            )
+            console.log(res)
+
+            if (res.status == 201) {
+                Swal.fire({
+                    title: 'Success!',
+                    text: "Your registration has been successfully",
+                    icon: 'success',
+
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById("create-user-form").reset();
+                        setRegisError("")
+                        setRefresh(!refresh);
+                        // onTableChange("update")
+                    }
+                })
+            }
+        } catch (e) {
+            console.log(e.response.data)
+            setRegisError(e.response.data.message)
+        }
+    }
 
     const subHeaderComponentMemo = useMemo(() => {
 
@@ -203,7 +217,6 @@ const Account = () => {
 
         const handleChange = async e => {
             const result = isValidEmail(e.target.value)
-
             if (result || e.target.value == "") {
                 setEmail(e.target.value)
                 setError(null);
@@ -243,17 +256,10 @@ const Account = () => {
 
                             <Disclosure.Panel className="pt-4 pb-2 ">
 
-                                <form className="w-full gap-4 flex-col flex items-center justify-center ">
+                                <form id="create-user-form" onSubmit={handleSubmit} className="w-full gap-4 flex-col flex items-center justify-center ">
 
                                     <div className="max-w-xl flex flex-wrap w-full gap-2 justify-center">
 
-                                        <div className="flex-col flex w-full md:w-fit  gap-2">
-                                            <label className="text-sm shrink-0">Username:</label>
-                                            <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
-                                                <input onChange={(e) => setUsername(e.target.value)} type="text" name="username" id="username" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
-                                            </div>
-
-                                        </div>
                                         <div className="flex-col flex  gap-2 w-full md:w-fit ">
                                             <label className="text-sm  shrink-0">Email:</label>
                                             <div className={classNames(error != null ? "border-red-500" : "border-gray-300", "flex items-center py-2 px-3 border  rounded-md")} >
@@ -261,6 +267,33 @@ const Account = () => {
                                             </div>
                                             <h2 className="text-red-500 text-sm">{error}</h2>
                                         </div>
+
+                                        <div className="flex-col flex  gap-2 w-full md:w-fit ">
+                                            <label className="text-sm  shrink-0">Permission:</label>
+                                            <div className="min-w-[250px] flex items-center py-2 px-3 border border-gray-300 rounded-md">
+                                                <select onChange={(e) => setRole(e.target.value)} name="role" id="role" className=" w-full outline-none border-none  placeholder:text-sm pl-1">
+                                                    <option value={true}>Admin</option>
+                                                    <option value={false}>User</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex-col flex w-full md:w-fit  gap-2">
+                                            <label className="text-sm shrink-0">Firstname:</label>
+                                            <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
+                                                <input onChange={(e) => setFirstname(e.target.value)} type="text" name="firstname" id="firstname" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
+                                            </div>
+
+                                        </div>
+
+                                        <div className="flex-col flex w-full md:w-fit  gap-2">
+                                            <label className="text-sm shrink-0">Lastname:</label>
+                                            <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
+                                                <input onChange={(e) => setLastname(e.target.value)} type="text" name="lastname" id="lastname" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
+                                            </div>
+
+                                        </div>
+
                                         <div className="flex-col flex  gap-2 w-full md:w-fit ">
                                             <label className="text-sm  shrink-0">Password:</label>
                                             <div className="relative flex items-center py-2 px-3 border border-gray-300 rounded-md">
@@ -269,7 +302,7 @@ const Account = () => {
                                                 <div onClick={() => setPassShow(!passShow)} className="cursor-pointer absolute right-2 opacity-25">
 
                                                     {!passShow ? <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <g clip-path="url(#clip0_87_25)">
+                                                        <g clipPath="url(#clip0_87_25)">
                                                             <path d="M11 4.125C6.41663 4.125 2.50246 6.97583 0.916626 11C2.50246 15.0242 6.41663 17.875 11 17.875C15.5833 17.875 19.4975 15.0242 21.0833 11C19.4975 6.97583 15.5833 4.125 11 4.125ZM11 15.5833C8.46996 15.5833 6.41663 13.53 6.41663 11C6.41663 8.47 8.46996 6.41667 11 6.41667C13.53 6.41667 15.5833 8.47 15.5833 11C15.5833 13.53 13.53 15.5833 11 15.5833ZM11 8.25C9.47829 8.25 8.24996 9.47833 8.24996 11C8.24996 12.5217 9.47829 13.75 11 13.75C12.5216 13.75 13.75 12.5217 13.75 11C13.75 9.47833 12.5216 8.25 11 8.25Z" fill="black" />
                                                         </g>
                                                         <defs>
@@ -279,7 +312,7 @@ const Account = () => {
                                                         </defs>
                                                     </svg>
                                                         : <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <g clip-path="url(#clip0_87_28)">
+                                                            <g clipPath="url(#clip0_87_28)">
                                                                 <path d="M11 6.41667C13.53 6.41667 15.5833 8.47 15.5833 11C15.5833 11.5958 15.4641 12.155 15.2533 12.6775L17.93 15.3542C19.3141 14.1992 20.405 12.705 21.0741 11C19.4883 6.97583 15.5741 4.125 10.9908 4.125C9.70746 4.125 8.47913 4.35417 7.34246 4.76667L9.32246 6.74667C9.84496 6.53583 10.4041 6.41667 11 6.41667ZM1.83329 3.91417L3.92329 6.00417L4.34496 6.42583C2.82329 7.60833 1.63163 9.185 0.916626 11C2.50246 15.0242 6.41663 17.875 11 17.875C12.4208 17.875 13.7775 17.6 15.015 17.105L15.4 17.49L18.0858 20.1667L19.25 19.0025L2.99746 2.75L1.83329 3.91417ZM6.90246 8.98333L8.32329 10.4042C8.27746 10.5967 8.24996 10.7983 8.24996 11C8.24996 12.5217 9.47829 13.75 11 13.75C11.2016 13.75 11.4033 13.7225 11.5958 13.6767L13.0166 15.0975C12.4025 15.4 11.7241 15.5833 11 15.5833C8.46996 15.5833 6.41663 13.53 6.41663 11C6.41663 10.2758 6.59996 9.5975 6.90246 8.98333V8.98333ZM10.8533 8.26833L13.7408 11.1558L13.7591 11.0092C13.7591 9.4875 12.5308 8.25917 11.0091 8.25917L10.8533 8.26833Z" fill="black" />
                                                             </g>
                                                             <defs>
@@ -305,7 +338,7 @@ const Account = () => {
                                                 <div onClick={() => setCPassShow(!CPassShow)} className="cursor-pointer absolute right-2 opacity-25">
 
                                                     {!CPassShow ? <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <g clip-path="url(#clip0_87_25)">
+                                                        <g clipPath="url(#clip0_87_25)">
                                                             <path d="M11 4.125C6.41663 4.125 2.50246 6.97583 0.916626 11C2.50246 15.0242 6.41663 17.875 11 17.875C15.5833 17.875 19.4975 15.0242 21.0833 11C19.4975 6.97583 15.5833 4.125 11 4.125ZM11 15.5833C8.46996 15.5833 6.41663 13.53 6.41663 11C6.41663 8.47 8.46996 6.41667 11 6.41667C13.53 6.41667 15.5833 8.47 15.5833 11C15.5833 13.53 13.53 15.5833 11 15.5833ZM11 8.25C9.47829 8.25 8.24996 9.47833 8.24996 11C8.24996 12.5217 9.47829 13.75 11 13.75C12.5216 13.75 13.75 12.5217 13.75 11C13.75 9.47833 12.5216 8.25 11 8.25Z" fill="black" />
                                                         </g>
                                                         <defs>
@@ -315,7 +348,7 @@ const Account = () => {
                                                         </defs>
                                                     </svg>
                                                         : <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <g clip-path="url(#clip0_87_28)">
+                                                            <g clipPath="url(#clip0_87_28)">
                                                                 <path d="M11 6.41667C13.53 6.41667 15.5833 8.47 15.5833 11C15.5833 11.5958 15.4641 12.155 15.2533 12.6775L17.93 15.3542C19.3141 14.1992 20.405 12.705 21.0741 11C19.4883 6.97583 15.5741 4.125 10.9908 4.125C9.70746 4.125 8.47913 4.35417 7.34246 4.76667L9.32246 6.74667C9.84496 6.53583 10.4041 6.41667 11 6.41667ZM1.83329 3.91417L3.92329 6.00417L4.34496 6.42583C2.82329 7.60833 1.63163 9.185 0.916626 11C2.50246 15.0242 6.41663 17.875 11 17.875C12.4208 17.875 13.7775 17.6 15.015 17.105L15.4 17.49L18.0858 20.1667L19.25 19.0025L2.99746 2.75L1.83329 3.91417ZM6.90246 8.98333L8.32329 10.4042C8.27746 10.5967 8.24996 10.7983 8.24996 11C8.24996 12.5217 9.47829 13.75 11 13.75C11.2016 13.75 11.4033 13.7225 11.5958 13.6767L13.0166 15.0975C12.4025 15.4 11.7241 15.5833 11 15.5833C8.46996 15.5833 6.41663 13.53 6.41663 11C6.41663 10.2758 6.59996 9.5975 6.90246 8.98333V8.98333ZM10.8533 8.26833L13.7408 11.1558L13.7591 11.0092C13.7591 9.4875 12.5308 8.25917 11.0091 8.25917L10.8533 8.26833Z" fill="black" />
                                                             </g>
                                                             <defs>
@@ -332,116 +365,11 @@ const Account = () => {
                                             {!cPasswordClass ? <div className="text-red-500 text-sm"> Passwords did not match </div> : ''}
                                         </div>
 
-
-                                        <div className="flex-col flex  gap-2 w-full md:w-fit ">
-                                            <label className="text-sm  shrink-0">Permission:</label>
-                                            <div className="min-w-[250px] flex items-center py-2 px-3 border border-gray-300 rounded-md">
-                                                <select onChange={(e) => setPermission(e.target.value)} name="status" id="status" className=" w-full outline-none border-none  placeholder:text-sm pl-1">
-                                                    <option value="admin">Admin</option>
-                                                    <option value="user">User</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-
-                                        <div className="flex-col flex  gap-2 w-full md:w-fit ">
-                                            <label className="text-sm  shrink-0">Status:</label>
-                                            <div className="min-w-[250px] flex items-center py-2 px-3 border border-gray-300 rounded-md">
-                                                <select onChange={(e) => setStatus(e.target.value)} name="status" id="status" className=" w-full outline-none border-none  placeholder:text-sm pl-1">
-                                                    <option value="active">Active</option>
-                                                    <option value="inactive">Inactive</option>
-                                                </select>
-                                                {/* <select type="text" name="date" id="date" className="w-full outline-none border-none  placeholder:text-sm pl-1" required /> */}
-                                            </div>
-                                        </div>
-
-
-                                        {/* <div className="flex flex-col gap-4 justify-between">
-                                                    <div className="flex flex-col gap-2">
-                                                        <label className="text-sm ">Select Profile :</label>
-
-                                                        <div className="flex flex-wrap gap-1">
-
-                                                            <div className="w-16 h-16 rounded-full relative overflow-hidden">
-                                                                <Image
-                                                                    src={"/assets/review1.png"}
-                                                                    alt="profile"
-                                                                    layout="fill"
-                                                                    objectFit="cover"
-                                                                    objectPosition={"center"}
-                                                                />
-                                                            </div>
-                                                            <div className="w-16 h-16 rounded-full relative overflow-hidden">
-                                                                <Image
-                                                                    src={"/assets/review1.png"}
-                                                                    alt="profile"
-                                                                    layout="fill"
-                                                                    objectFit="cover"
-                                                                    objectPosition={"center"}
-                                                                />
-                                                            </div>
-                                                            <div className="w-16 h-16 rounded-full relative overflow-hidden">
-                                                                <Image
-                                                                    src={"/assets/review1.png"}
-                                                                    alt="profile"
-                                                                    layout="fill"
-                                                                    objectFit="cover"
-                                                                    objectPosition={"center"}
-                                                                />
-                                                            </div>
-                                                        </div>
-
-
-
-                                                    </div>
-
-                                                    <div className="max-w-sm flex flex-col gap-2">
-                                                        <label className="text-sm  shrink-0">Author by:</label>
-                                                        <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
-                                                            <input type="text" name="author" id="author" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex flex-col gap-4 justify-between">
-                                                    <div className="max-w-sm  flex flex-col  gap-2  h-full">
-                                                        <label className="text-sm  shrink-0">Comment:</label>
-                                                        <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
-
-                                                            <textarea
-                                                                className=" outline-none border-none h-[140px]  placeholder:text-sm pl-1" id="comment" type="text" name="comment" />
-
-                                                        </div>
-                                                    </div>
-
-
-                                                </div>
-
-                                                <div className="flex flex-col gap-4 justify-between">
-                                                    <div className="max-w-sm  flex-col flex  gap-2 w-full md:w-fit ">
-                                                        <label className="text-sm  shrink-0">Review Date:</label>
-                                                        <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
-                                                            <input type="text" name="date" id="date" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex max-w-sm flex-col gap-2">
-                                                        <label className="text-sm  shrink-0">Rate:</label>
-                                                        <div className=" flex items-center py-2 px-3 border border-gray-300 rounded-md">
-                                                            <input type="text" name="rate" id="rate" className="w-full outline-none border-none  placeholder:text-sm pl-1" required />
-                                                        </div>
-                                                    </div>
-                                                </div> */}
-
-
                                     </div>
 
 
-
-
-
-
-                                    <div className="max-w-sm w-36 mt-2 flex justify-around gap-3 relative">
+                                    {regisError != "" ? <p className="text-red-500 text-sm">{regisError}</p> : null}
+                                    <div className="max-w-sm w-36  flex justify-around gap-3 relative">
                                         <button type="submit" className="w-full px-6 py-2 text-white bg-black rounded-3xl border border-black">Submit</button>
 
                                     </div>
@@ -458,50 +386,54 @@ const Account = () => {
 
         );
 
-    }, [filterText, error, , password, passShow, CPassShow, cPasswordClass]);
-
+    }, [filterText, error, , password, passShow, CPassShow, cPasswordClass, role, email, firstname, lastname, regisError]);
 
 
     const filteredItems = !filterText ? data :
         data.filter(
-            item => item.username.toLowerCase().includes(filterText.toLowerCase()),
+            item => item.firstName.toLowerCase().includes(filterText.toLowerCase()),
         );
 
     const columns = [
         {
             name: 'ID', sortable: true,
-            selector: row => row.id,
+            selector: (row, index) => index + 1,
         },
         {
-            name: 'Username', sortable: true,
-            selector: row => row.username,
-        },
-        {
-            name: 'Email', sortable: true,
+            name: 'Email', sortable: true, grow: 2,
             selector: row => row.email,
         },
         {
+            name: 'Name', sortable: true,
+            selector: row => row.firstName + " " + row.lastName,
+        },
+        {
             name: 'Last_login',
-            selector: row => row.last_login,
+            selector: row => moment(row.last_login).format('lll'),
+        },
+        {
+            name: 'Create_date',
+            selector: row => moment(row.created_at
+            ).format('ll'),
         },
         {
             name: 'Status', center: true,
             selector: row => <Switch
                 checked={row.status}
-                onChange={() => updateStatus(row.id)}
-                className={`${row.status == "active" ? 'bg-teal-600' : 'bg-gray-200 '
+                onChange={() => updateStatus(row.id, row.status, row.phone, row.position)}
+                className={`${row.status ? 'bg-teal-600' : 'bg-gray-200 '
                     } relative inline-flex h-6 w-11 items-center rounded-full`}
             >
                 <span className="sr-only">Enable notifications</span>
                 <span
-                    className={`${row.status == "active" ? 'translate-x-6' : 'translate-x-1'
+                    className={`${row.status ? 'translate-x-6' : 'translate-x-1'
                         } inline-block h-4 w-4 transform rounded-full bg-white transition`}
                 />
             </Switch>,
         },
         {
-            name: 'Permission',
-            selector: row => row.rule,
+            name: 'Permission', center: true,
+            selector: row => row.role ? "Admin" : "User",
         },
 
         {
@@ -510,11 +442,14 @@ const Account = () => {
             selector: row => <div className="inline-flex gap-3">
 
                 {/* <UpdateVender data={row} onUpdateVender={updateVender} /> */}
-                <UpdateUser data={row} />
+                <UpdateUser data={row} onUpdated={updated} />
                 <button onClick={() => deleteVender(row.id)} className="bg-red-500 p-2 text-white rounded text-sm">DELETE</button>
             </div>,
         },
     ];
+
+
+    if (!data) return <div>Loding...</div>
 
 
 
